@@ -1,0 +1,9 @@
+data/
+*.joblib
+*.npz
+*.h5
+.ipynb_checkpoints/
+.DS_Store
+__pycache__/
+outputs/
+.venv/

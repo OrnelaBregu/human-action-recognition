@@ -1,0 +1,11 @@
+# Tested with Python 3.12 on macOS (Apple Silicon).
+numpy>=1.24
+scipy>=1.10
+scikit-learn>=1.2
+opencv-python>=4.7
+matplotlib>=3.7
+joblib>=1.2
+tqdm>=4.65
+tensorflow>=2.13          # CNN-LSTM
+torch>=2.1                # pose keypoints (torchvision Keypoint R-CNN)
+torchvision>=0.16
