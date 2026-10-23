@@ -92,25 +92,48 @@ Times are wall-clock with the periods the laptop was asleep removed, so they are
 
 ![UCF101 confusion matrices for the four approaches](figures/ucf101_confusion.png)
 
-### KTH (team course project)
+### KTH (rerun vs. course project)
 
-6 actions (boxing, hand clapping, hand waving, jogging, running, walking), 25 people.
+6 actions (boxing, hand clapping, hand waving, jogging, running, walking), 25 people, official subject split: 1,528 training and validation videos (16 people) and 863 test videos (9 other people). Random guessing would score 16.7%.
 
-| Approach | Best model | Test accuracy |
-|---|---|---|
-| Raw frames | MLP (2 layers) | 41.5% |
-| Optical flow + bag of visual words | Linear SVM | 85.7% |
-| Pose keypoints | MLP (3 layers) | 85.7% |
-| CNN-LSTM | **VGG16-LSTM** | **88.0%** |
+| Approach | Course project: best model | Course project | Rerun: best model | Rerun | Change |
+|---|---|---|---|---|---|
+| Raw frames | MLP (2 layers) | 41.5% | Logistic regression | 35.2% | −6.3 |
+| Optical flow + bag of visual words | Linear SVM | 85.7% | MLP (1 layer) | 84.5% | −1.2 |
+| Pose keypoints | MLP (3 layers) | 85.7% | **MLP (2 layers)** | **88.2%** | +2.5 |
+| CNN-LSTM | **VGG16-LSTM** | **88.0%** | VGG16-LSTM | 79.4% | −8.6 |
+
+**Why the numbers changed.** The rerun uses the same methods and hyperparameter searches as the course project, but fixes how they are evaluated and fits on a 24 GB laptop:
+
+- **CNN-LSTM (−8.6): a fair split.** The course project split videos at random, so the same people appeared in training and test. The rerun tests on 9 people the model has never seen. The model's own validation set, drawn from the training people, still scores 92–94%, while unseen people score 79%: that gap suggests most of the drop comes from the model having partly learned the people rather than the actions. To fit in memory, the rerun also reads every 2nd frame, up to 60 frames (about 5 seconds), instead of the first 250 frames, so part of the gap may come from that. Its errors are all between similar actions: hand waving taken for hand clapping (33%), jogging for running (25%) and walking for jogging (19%).
+- **Pose keypoints (+2.5): a rebuilt pipeline.** The course project's pose data was lost and the step that built it was rebuilt from the report. Keypoints now come from torchvision's Keypoint R-CNN (ResNet-50) on every 3rd frame, instead of Detectron2's (ResNet-101). Despite the smaller model, pose is now the best approach on KTH; 6 of its models score above 85% (logistic regression 88.1%, polynomial SVM 87.5%).
+- **Optical flow (−1.2): essentially reproduced.** The original evaluation accumulated predictions across models; with that fixed, the best models land within about 1.5 points of the course result (linear SVM 84.0%, MLP 84.5%).
+- **Raw frames (−6.3): a fixed split and a collapsed MLP.** The original frame extraction put one person in both validation and test and left another out, and video labels were the rounded mean of frame predictions instead of a majority vote. The rerun also uses every 2nd frame to fit in memory. With the course's fixed settings (SGD, learning rate 0.01, momentum 0.9, 10 iterations) the 2-layer MLP never started learning and predicts a single class (16.7%), so logistic regression (35.2%) is the best raw-frame model; AdaBoost scores 33.0%.
+
+**Runtime** (same laptop and conditions as for UCF101):
+
+| Approach | Feature extraction | Training (all models, incl. hyperparameter search) | Best model alone |
+|---|---|---|---|
+| Raw frames | 16 s | 43 min (AdaBoost 40 min of it) | 20 s |
+| Optical flow + bag of visual words | ~4 min flow + ~9 min K-means | ~8 min | 7 min |
+| Pose keypoints | 1.7 h (GPU) | ~1.1 h | ~16 min |
+| CNN-LSTM | – (frozen VGG16 runs inside training) | 4.9 h for 12 epochs + 14 min test | 5.2 h |
+
+The pose-keypoint MLPs ran partly while the laptop slept, so their times are estimates. The raw-frame baseline peaked at 14.4 GB of memory and the CNN-LSTM at 15.6 GB.
+
+**Where each approach goes wrong** (normalized confusion matrices, best model per approach). Optical flow, pose and the CNN-LSTM all mix up jogging and running; the CNN-LSTM also confuses hand waving with hand clapping, which pose separates well. Raw frames send most leg actions to walking.
+
+![KTH confusion matrices for the four approaches](figures/kth_confusion.png)
 
 ## 💡 Key findings
 
-- **Good features close most of the gap to deep learning, on clean video.** On KTH, motion and pose features lifted simple classifiers from about 41% to about 86%, within 2–3 points of the best deep network. On UCF101 the gap is wider: the VGG16-LSTM reaches 91.1%, 15 points above the best classical model (pose, 75.9%).
+- **Deep learning wins on real video, not on lab video.** On KTH, with a fair split by person, pose features with a small MLP (88.2%) beat the VGG16-LSTM (79.4%). On UCF101 the order flips: the VGG16-LSTM reaches 91.1%, 15 points above the best classical model (pose, 75.9%). In both datasets, motion and pose features lift simple classifiers far above raw pixels (35–53%).
+- **A leaky split flatters the deep model most.** The course project's random KTH split put the same people in training and test and gave the VGG16-LSTM 88.0%; tested on unseen people it scores 79.4%, while optical flow and pose moved by less than 3 points (see the KTH comparison above).
 - **Motion beats appearance, until two actions move alike.** On UCF101, optical flow beats raw frames (70.5% vs 53.1%) and recognizes Punch and ShavingBeard well (92% and 86% of test videos correct). But it confuses TennisSwing with CricketShot: both are one big swinging arc. Telling them apart needs to *see* the scene (a court or a pitch, a racket or a bat), which is what the CNN-LSTM adds.
 - **Pose is the strongest classical feature on real video, with the same blind spot.** Body keypoints reach 75.9% on UCF101 (1-layer MLP; polynomial SVM 71.9%), ahead of optical flow. Pose is strong on ShavingBeard and PlayingCello (93% and 89%), but 25 of the 98 TennisSwing and CricketShot test videos are mistaken for each other: the body moves the same way in both, so the joints alone cannot separate them.
 - **Seeing the scene resolves it.** The VGG16-LSTM, which looks at every frame's appearance, gets TennisSwing right 98% of the time and mixes up only 10 of the 98 TennisSwing and CricketShot test videos (25 with pose). Its remaining errors are mostly CricketShot predicted as TennisSwing (9 of 49).
-- **Real-world video is much harder than lab video.** The same optical-flow pipeline scores 85.7% on KTH (static camera, plain background) and 70.5% on UCF101 (moving cameras, cluttered scenes).
-- **Compute cost moves rather than disappears.** Classical models train in seconds, but pose extraction and deep features need a GPU or hours of CPU time.
+- **Real-world video is much harder than lab video.** The same optical-flow pipeline scores 84.5% on KTH (static camera, plain background) and 70.5% on UCF101 (moving cameras, cluttered scenes).
+- **Compute cost moves rather than disappears.** The best classical models train in seconds to minutes once features exist, but pose extraction takes about 2 hours on a laptop GPU, and the CNN-LSTM trains for 2.2 hours (UCF101) to 5 hours (KTH) on CPU.
 
 ## 🚧 Project status
 
@@ -119,7 +142,7 @@ Times are wall-clock with the periods the laptop was asleep removed, so they are
 - [x] UCF101: raw-frame baseline and optical flow + bag of visual words
 - [x] UCF101: pose keypoints (torchvision Keypoint R-CNN)
 - [x] UCF101: CNN-LSTM
-- [ ] KTH: rerun the full pipeline on the original data and compare with the course project results
+- [x] KTH: rerun the full pipeline on the original data and compare with the course project results
 - [ ] Next: compare with a modern video foundation model, fine-tuned with few labels
 
 ## 🗂️ Repository structure
@@ -177,7 +200,7 @@ The scripts are a rewrite of the original course notebooks. The methods and hype
 - **Fairer deep-learning split.** The original CNN-LSTM split videos at random, so the same person could appear in training and test. `--split official` uses the dataset's own split instead.
 - **Portable pose extraction.** `extract_keypoints_torchvision.py` uses torchvision's Keypoint R-CNN (ResNet-50) rather than Detectron2's (ResNet-101), so it runs without a dedicated GPU.
 
-Because of these fixes, rerunning on KTH will not reproduce the course project numbers exactly. The KTH table above is from the original project report.
+Because of these fixes, rerunning on KTH will not reproduce the course project numbers exactly. The KTH comparison above lists both.
 
 </details>
 
