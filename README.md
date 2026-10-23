@@ -47,6 +47,23 @@ flowchart LR
 | **Pose keypoints** | The positions of 13 body joints in each frame | Yes: joints have a physical meaning |
 | **CNN-LSTM** | Deep features of every frame, modelled over time | No: a black box |
 
+### 🎞️ The datasets
+
+**KTH**: 25 people perform 6 actions against plain backgrounds, filmed with a static camera.
+
+![One test frame per KTH action](figures/kth_actions.png)
+
+**UCF101** (5-action subset): real YouTube videos with moving cameras, cluttered scenes and very different settings per action.
+
+![One test frame per UCF101 action](figures/ucf101_actions.png)
+
+### 👀 What each approach sees
+
+The same test frame, as seen by each classical pipeline: the raw frame shrunk to 60×80 pixels, the optical-flow vectors sampled on a 12×16 grid, and the 13 body keypoints found by Keypoint R-CNN. The CNN-LSTM sees full 120×160 frames.
+
+![KTH handwaving: frame, raw pixels, optical flow, pose](figures/kth_views.png)
+![UCF101 TennisSwing: frame, raw pixels, optical flow, pose](figures/ucf101_views.png)
+
 ## 📊 Results
 
 ### UCF101 (new experiments)
@@ -59,6 +76,21 @@ flowchart LR
 | Optical flow + bag of visual words | Random forest | 70.5% | ✅ |
 | Pose keypoints | MLP (1 layer) | 75.9% | ✅ |
 | CNN-LSTM | **VGG16-LSTM** | **91.1%** | ✅ |
+
+**Runtime** on a MacBook Pro (Apple M4 Pro, 24 GB). Pose extraction uses the GPU (PyTorch MPS); everything else runs on the CPU, including TensorFlow.
+
+| Approach | Feature extraction | Training (all models, incl. hyperparameter search) | Best model alone |
+|---|---|---|---|
+| Raw frames | under a minute | ~20 min (almost all AdaBoost) | 3 s |
+| Optical flow + bag of visual words | ~4 min flow + ~17 min K-means | ~10 min | 1 s |
+| Pose keypoints | ~2.1 h (GPU) | ~1.1 h | 7 min |
+| CNN-LSTM | – (frozen VGG16 runs inside training) | 2.2 h for 12 epochs + 4 min test | 2.2 h |
+
+Times are wall-clock with the periods the laptop was asleep removed, so they are approximate. The pose-keypoint MLPs shared the CPU with the CNN-LSTM, so both are slightly slower than they would be alone.
+
+**Where each approach goes wrong**: normalized confusion matrices of each approach's best model on the test set (rows: true action, columns: predicted). Optical flow and pose both send many TennisSwing videos to CricketShot; the CNN-LSTM, which sees the court, almost never does.
+
+![UCF101 confusion matrices for the four approaches](figures/ucf101_confusion.png)
 
 ### KTH (team course project)
 
