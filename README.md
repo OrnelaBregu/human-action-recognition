@@ -56,9 +56,9 @@ flowchart LR
 | Approach | Best model | Test accuracy | Status |
 |---|---|---|---|
 | Raw frames | Logistic regression | 53.1% | ✅ |
-| Optical flow + bag of visual words | Random forest | **70.5%** | ✅ |
-| Pose keypoints | – | – | ⏳ running |
-| CNN-LSTM | VGG16-LSTM | – | ⏳ running |
+| Optical flow + bag of visual words | Random forest | 70.5% | ✅ |
+| Pose keypoints | MLP (1 layer) | 75.9% | ✅ |
+| CNN-LSTM | **VGG16-LSTM** | **91.1%** | ✅ |
 
 ### KTH (team course project)
 
@@ -73,8 +73,10 @@ flowchart LR
 
 ## 💡 Key findings
 
-- **Good features close most of the gap to deep learning.** On KTH, motion and pose features lifted simple classifiers from about 41% to about 86%, within 2–3 points of the best deep network.
+- **Good features close most of the gap to deep learning, on clean video.** On KTH, motion and pose features lifted simple classifiers from about 41% to about 86%, within 2–3 points of the best deep network. On UCF101 the gap is wider: the VGG16-LSTM reaches 91.1%, 15 points above the best classical model (pose, 75.9%).
 - **Motion beats appearance, until two actions move alike.** On UCF101, optical flow beats raw frames (70.5% vs 53.1%) and recognizes Punch and ShavingBeard well (92% and 86% of test videos correct). But it confuses TennisSwing with CricketShot: both are one big swinging arc. Telling them apart needs to *see* the scene (a court or a pitch, a racket or a bat), which is what the CNN-LSTM adds.
+- **Pose is the strongest classical feature on real video, with the same blind spot.** Body keypoints reach 75.9% on UCF101 (1-layer MLP; polynomial SVM 71.9%), ahead of optical flow. Pose is strong on ShavingBeard and PlayingCello (93% and 89%), but 25 of the 98 TennisSwing and CricketShot test videos are mistaken for each other: the body moves the same way in both, so the joints alone cannot separate them.
+- **Seeing the scene resolves it.** The VGG16-LSTM, which looks at every frame's appearance, gets TennisSwing right 98% of the time and mixes up only 10 of the 98 TennisSwing and CricketShot test videos (25 with pose). Its remaining errors are mostly CricketShot predicted as TennisSwing (9 of 49).
 - **Real-world video is much harder than lab video.** The same optical-flow pipeline scores 85.7% on KTH (static camera, plain background) and 70.5% on UCF101 (moving cameras, cluttered scenes).
 - **Compute cost moves rather than disappears.** Classical models train in seconds, but pose extraction and deep features need a GPU or hours of CPU time.
 
@@ -83,8 +85,8 @@ flowchart LR
 - [x] Convert the original notebooks into a reusable, tested command-line pipeline
 - [x] Support several datasets (KTH, UCF101) with official splits
 - [x] UCF101: raw-frame baseline and optical flow + bag of visual words
-- [ ] UCF101: pose keypoints (torchvision Keypoint R-CNN, running)
-- [ ] UCF101: CNN-LSTM (running)
+- [x] UCF101: pose keypoints (torchvision Keypoint R-CNN)
+- [x] UCF101: CNN-LSTM
 - [ ] KTH: rerun the full pipeline on the original data and compare with the course project results
 - [ ] Next: compare with a modern video foundation model, fine-tuned with few labels
 
