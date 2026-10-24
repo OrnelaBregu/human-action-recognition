@@ -85,7 +85,7 @@ The same test frame, as seen by each classical pipeline: the raw frame shrunk to
 
 \* Pretrained on unlabelled video that likely includes footage similar to UCF101; with only 5 labelled videos per class it scores 93.6%. See [the foundation-model section](#-a-video-foundation-model-with-few-labels).
 
-**Runtime** on a MacBook Pro (Apple M4 Pro, 24 GB). Pose extraction uses the GPU (PyTorch MPS); everything else runs on the CPU, including TensorFlow.
+**Runtime** on a MacBook Pro (Apple M4 Pro, 24 GB). Pose extraction and V-JEPA 2 use the GPU (PyTorch MPS); everything else runs on the CPU, including TensorFlow.
 
 | Approach | Feature extraction | Training (all models, incl. hyperparameter search) | Best model alone |
 |---|---|---|---|
