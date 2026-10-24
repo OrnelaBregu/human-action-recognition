@@ -32,13 +32,16 @@ flowchart LR
     V --> B[Optical flow<br/>motion vectors]
     V --> C[Pose keypoints<br/>Keypoint R-CNN]
     V --> D[Frame features<br/>pretrained VGG16 / ResNet50]
+    V --> F[Clip features<br/>frozen V-JEPA 2]
     A --> M1[Logistic regression · MLP · AdaBoost]
     B --> W[Bag of visual words<br/>K-means + TF-IDF] --> M2[SVM · Random forest · KNN · MLP ...]
     C --> M3[SVM · Random forest · KNN · MLP ...]
     D --> L[LSTM over time] --> R[🏷️ Action label]
+    F --> M4[Logistic regression<br/>1 to all labels per class]
     M1 --> R
     M2 --> R
     M3 --> R
+    M4 --> R
 ```
 
 | Approach | What the model sees | Interpretable? |
@@ -160,7 +163,7 @@ Can a model pretrained on millions of unlabelled videos recognize these actions 
 - **Pose is the strongest classical feature on real video, with the same blind spot.** Body keypoints reach 75.9% on UCF101 (1-layer MLP; polynomial SVM 71.9%), ahead of optical flow. Pose is strong on ShavingBeard and PlayingCello (93% and 89%), but 25 of the 98 TennisSwing and CricketShot test videos are mistaken for each other: the body moves the same way in both, so the joints alone cannot separate them.
 - **Seeing the scene resolves it.** The VGG16-LSTM, which looks at every frame's appearance, gets TennisSwing right 98% of the time and mixes up only 10 of the 98 TennisSwing and CricketShot test videos (25 with pose). Its remaining errors are mostly CricketShot predicted as TennisSwing (9 of 49).
 - **Real-world video is much harder than lab video.** The same optical-flow pipeline scores 84.5% on KTH (static camera, plain background) and 70.5% on UCF101 (moving cameras, cluttered scenes).
-- **A foundation model needs far fewer labels, where it has seen similar video.** Frozen V-JEPA 2 features reach 93.6% on UCF101 with 5 labelled videos per class, above the CNN-LSTM trained on all 594, but on lab-recorded KTH they lose to pose keypoints from 5 labels up (81.8% vs 87.5% with all labels): averaging its features over time loses the speed that separates jogging from running and walking.
+- **A foundation model needs far fewer labels, where it has seen similar video.** Frozen V-JEPA 2 features reach 93.6% on UCF101 with 5 labelled videos per class, above the CNN-LSTM trained on all 594, but on lab-recorded KTH they lose to pose keypoints from 5 labels up (81.8% vs 87.5% with all labels), most likely because averaging its features over time loses the speed that separates jogging from running and walking.
 - **Compute cost moves rather than disappears.** The best classical models train in seconds to minutes once features exist, but pose extraction takes about 2 hours on a laptop GPU, and the CNN-LSTM trains for 2.2 hours (UCF101) to 5 hours (KTH) on CPU. The frozen foundation model is the cheapest strong option: one 9–23 minute encoding pass on the GPU, then seconds per classifier.
 
 ## 🚧 Project status
