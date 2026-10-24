@@ -97,9 +97,9 @@ The same test frame, as seen by each classical pipeline: the raw frame shrunk to
 
 Times are wall-clock with the periods the laptop was asleep removed, so they are approximate. The pose-keypoint MLPs shared the CPU with the CNN-LSTM, so both are slightly slower than they would be alone.
 
-**Where each approach goes wrong**: normalized confusion matrices of each approach's best model on the test set (rows: true action, columns: predicted). Optical flow and pose both send many TennisSwing videos to CricketShot; the CNN-LSTM, which sees the court, almost never does.
+**Where each approach goes wrong**: normalized confusion matrices of each approach's best model on the test set (rows: true action, columns: predicted). Optical flow and pose both send many TennisSwing videos to CricketShot; the CNN-LSTM, which sees the court, almost never does, and V-JEPA 2 makes a single mistake on all 224 test videos (one CricketShot taken for Punch). Raw frames are left out for readability.
 
-![UCF101 confusion matrices for the four approaches](figures/ucf101_confusion.png)
+![UCF101 confusion matrices for optical flow, pose, CNN-LSTM and V-JEPA 2](figures/ucf101_confusion.png)
 
 ### KTH (rerun vs. course project)
 
@@ -132,9 +132,9 @@ Times are wall-clock with the periods the laptop was asleep removed, so they are
 
 The pose-keypoint MLPs ran partly while the laptop slept, so their times are estimates. The raw-frame baseline peaked at 14.4 GB of memory and the CNN-LSTM at 15.6 GB.
 
-**Where each approach goes wrong** (normalized confusion matrices, best model per approach). Optical flow, pose and the CNN-LSTM all mix up jogging and running; the CNN-LSTM also confuses hand waving with hand clapping, which pose separates well. Raw frames send most leg actions to walking.
+**Where each approach goes wrong** (normalized confusion matrices, best model per approach). Every approach mixes up jogging and running. The CNN-LSTM also confuses hand waving with hand clapping, which pose separates well. V-JEPA 2 is near-perfect on the arm actions but gets only 31% of jogging videos right, splitting the rest between running and walking. Raw frames are left out for readability.
 
-![KTH confusion matrices for the four approaches](figures/kth_confusion.png)
+![KTH confusion matrices for optical flow, pose, CNN-LSTM and V-JEPA 2](figures/kth_confusion.png)
 
 ### 🧠 A video foundation model with few labels
 
