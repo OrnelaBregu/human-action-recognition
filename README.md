@@ -80,7 +80,10 @@ The same test frame, as seen by each classical pipeline: the raw frame shrunk to
 | Raw frames | Logistic regression | 53.1% | ✅ |
 | Optical flow + bag of visual words | Random forest | 70.5% | ✅ |
 | Pose keypoints | MLP (1 layer) | 75.9% | ✅ |
-| CNN-LSTM | **VGG16-LSTM** | **91.1%** | ✅ |
+| CNN-LSTM | VGG16-LSTM | 91.1% | ✅ |
+| Foundation model | **V-JEPA 2 (frozen) + logistic regression** | **99.6%**\* | ✅ |
+
+\* Pretrained on unlabelled video that likely includes footage similar to UCF101; with only 5 labelled videos per class it scores 93.6%. See [the foundation-model section](#-a-video-foundation-model-with-few-labels).
 
 **Runtime** on a MacBook Pro (Apple M4 Pro, 24 GB). Pose extraction uses the GPU (PyTorch MPS); everything else runs on the CPU, including TensorFlow.
 
@@ -90,6 +93,7 @@ The same test frame, as seen by each classical pipeline: the raw frame shrunk to
 | Optical flow + bag of visual words | ~4 min flow + ~17 min K-means | ~10 min | 1 s |
 | Pose keypoints | ~2.1 h (GPU) | ~1.1 h | 7 min |
 | CNN-LSTM | – (frozen VGG16 runs inside training) | 2.2 h for 12 epochs + 4 min test | 2.2 h |
+| Foundation model (V-JEPA 2) | 9 min (GPU) | seconds | seconds |
 
 Times are wall-clock with the periods the laptop was asleep removed, so they are approximate. The pose-keypoint MLPs shared the CPU with the CNN-LSTM, so both are slightly slower than they would be alone.
 
@@ -107,6 +111,7 @@ Times are wall-clock with the periods the laptop was asleep removed, so they are
 | Optical flow + bag of visual words | Linear SVM | 85.7% | MLP (1 layer) | 84.5% | −1.2 |
 | Pose keypoints | MLP (3 layers) | 85.7% | **MLP (2 layers)** | **88.2%** | +2.5 |
 | CNN-LSTM | **VGG16-LSTM** | **88.0%** | VGG16-LSTM | 79.4% | −8.6 |
+| Foundation model | – | – | V-JEPA 2 (frozen) + logistic regression | 81.8% | new |
 
 **Why the numbers changed.** The rerun uses the same methods and hyperparameter searches as the course project, but fixes how they are evaluated and fits on a 24 GB laptop:
 
@@ -123,6 +128,7 @@ Times are wall-clock with the periods the laptop was asleep removed, so they are
 | Optical flow + bag of visual words | ~4 min flow + ~9 min K-means | ~8 min | 7 min |
 | Pose keypoints | 1.7 h (GPU) | ~1.1 h | ~16 min |
 | CNN-LSTM | – (frozen VGG16 runs inside training) | 4.9 h for 12 epochs + 14 min test | 5.2 h |
+| Foundation model (V-JEPA 2) | 23 min (GPU) | seconds | seconds |
 
 The pose-keypoint MLPs ran partly while the laptop slept, so their times are estimates. The raw-frame baseline peaked at 14.4 GB of memory and the CNN-LSTM at 15.6 GB.
 
