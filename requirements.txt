@@ -9,3 +9,4 @@ tqdm>=4.65
 tensorflow>=2.13          # CNN-LSTM
 torch>=2.1                # pose keypoints (torchvision Keypoint R-CNN)
 torchvision>=0.16
+transformers>=4.53        # V-JEPA 2 video foundation model
