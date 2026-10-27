@@ -9,22 +9,13 @@
 
 **Can a computer tell what a person is doing in a video, and does it need deep learning to do it?**
 
-This project compares four ways of recognizing human actions in video, from simple models on raw pixels to deep networks, on two benchmark datasets, and then tests a modern video foundation model that learns from only a few labelled videos. Every approach is measured on the same footing: **accuracy, computing cost and how interpretable the result is**. Those trade-offs matter when choosing a model for a real system, such as video surveillance, health monitoring or robotics.
+This project compares four ways of recognizing human actions in video, from simple models on raw pixels to deep networks, on two benchmark datasets, and then tests a modern video foundation model that learns from only a few labelled videos. Every approach is measured on the same footing: accuracy, computing cost and how interpretable the result is. Those trade-offs matter when choosing a model for a real system, such as video surveillance, health monitoring or robotics.
 
 It builds on a team project for COMP 6321 (Machine Learning) at Concordia University. I have since rebuilt it as a reusable pipeline and extended it to a new, harder dataset.
 
 ---
 
-## ✨ Highlights
-
-- **4 approaches, one framework:** raw-pixel classifiers, motion features (optical flow), human-pose features, and a CNN-LSTM deep network.
-- **2 datasets:** KTH (lab-recorded, 6 actions) and UCF101 (real YouTube videos, 5-action subset).
-- **A foundation model with few labels:** Meta's V-JEPA 2, frozen, against the best classical features, from 1 labelled video per class upwards.
-- **Fair evaluation:** official subject and group splits, so the same person or scene never appears in both training and testing.
-- **Reproducible:** command-line scripts with cached intermediate results, runnable on a laptop (tested on Apple Silicon).
-- **Modernized:** converted from notebooks to scripts, fixed evaluation issues in the original code, and replaced a GPU-only pose model with one that runs on CPU, CUDA or Apple Silicon.
-
-## 🧭 How it works
+## How it works
 
 ```mermaid
 flowchart LR
@@ -52,7 +43,7 @@ flowchart LR
 | **CNN-LSTM** | Deep features of every frame, modelled over time | No: a black box |
 | **V-JEPA 2 + linear classifier** | Features from a large video transformer pretrained on unlabelled video, averaged over the clip | No: a black box |
 
-### 🎞️ The datasets
+### The datasets
 
 **KTH**: 25 people perform 6 actions against plain backgrounds, filmed with a static camera.
 
@@ -69,19 +60,20 @@ The same test frame, as seen by each classical pipeline: the raw frame shrunk to
 ![KTH handwaving: frame, raw pixels, optical flow, pose](figures/kth_views.png)
 ![UCF101 TennisSwing: frame, raw pixels, optical flow, pose](figures/ucf101_views.png)
 
-## 📊 Results
+## Results
 
 ### UCF101 (new experiments)
 
-5 actions (CricketShot, PlayingCello, Punch, ShavingBeard, TennisSwing), official split 1: 594 training and 224 test videos. Random guessing would score 20%.
+5 actions (CricketShot, PlayingCello, Punch, ShavingBeard, TennisSwing), official split 1: 594 training and 224 test videos. 
+Random guessing would score 20%.
 
-| Approach | Best model | Test accuracy | Status |
-|---|---|---|---|
-| Raw frames | Logistic regression | 53.1% | ✅ |
-| Optical flow + bag of visual words | Random forest | 70.5% | ✅ |
-| Pose keypoints | MLP (1 layer) | 75.9% | ✅ |
-| CNN-LSTM | VGG16-LSTM | 91.1% | ✅ |
-| Foundation model | **V-JEPA 2 (frozen) + logistic regression** | **99.6%**\* | ✅ |
+| Approach | Best model | Test accuracy 
+|---|---|---|
+| Raw frames | Logistic regression | 53.1% | 
+| Optical flow + bag of visual words | Random forest | 70.5% |
+| Pose keypoints | MLP (1 layer) | 75.9% |
+| CNN-LSTM | VGG16-LSTM | 91.1% | 
+| Foundation model | **V-JEPA 2 (frozen) + logistic regression** | **99.6%**\* |
 
 \* Pretrained on unlabelled video that likely includes footage similar to UCF101; with only 5 labelled videos per class it scores 93.6%. See [the foundation-model section](#-a-video-foundation-model-with-few-labels).
 
