@@ -53,7 +53,7 @@ flowchart LR
 
 ![One test frame per UCF101 action](figures/ucf101_actions.png)
 
-### 👀 What each approach sees
+### What each approach sees
 
 The same test frame, as seen by each classical pipeline: the raw frame shrunk to 60×80 pixels, the optical-flow vectors sampled on a 12×16 grid, and the 13 body keypoints found by Keypoint R-CNN. The CNN-LSTM sees full 120×160 frames.
 
@@ -128,7 +128,7 @@ The pose-keypoint MLPs ran partly while the laptop slept, so their times are est
 
 ![KTH confusion matrices for optical flow, pose, CNN-LSTM and V-JEPA 2](figures/kth_confusion.png)
 
-### 🧠 A video foundation model with few labels
+### A video foundation model with few labels
 
 Can a model pretrained on millions of unlabelled videos recognize these actions from just a handful of examples? [V-JEPA 2](https://arxiv.org/abs/2506.09985) (Meta, 2025; ViT-L, 300M parameters) is kept frozen: each video is encoded once (16 frames spread over the clip, full frame resized to 256×256) and its features are averaged. A logistic regression is then trained on *k* labelled training videos per class and tested on the full official test set. Each budget is drawn 5 times at random, and pose keypoints, the best classical features, are given exactly the same draws. The classifier is not tuned at any budget (there is nothing to tune it on with one video per class), which is why pose with all labels scores slightly below its tuned results above.
 
@@ -153,7 +153,7 @@ Can a model pretrained on millions of unlabelled videos recognize these actions 
 
 **Runtime:** encoding every video takes 9 minutes for UCF101 and 23 minutes for KTH on the laptop GPU (one pass, no training), and each classifier trains in seconds: about as fast as the optical-flow pipeline, and much faster than pose extraction or the CNN-LSTM.
 
-## 💡 Key findings
+## Key findings
 
 - **Deep learning wins on real video, not on lab video.** On KTH, with a fair split by person, pose features with a small MLP (88.2%) beat the VGG16-LSTM (79.4%). On UCF101 the order flips: the VGG16-LSTM reaches 91.1%, 15 points above the best classical model (pose, 75.9%). In both datasets, motion and pose features lift simple classifiers far above raw pixels (35–53%).
 - **A leaky split flatters the deep model most.** The course project's random KTH split put the same people in training and test and gave the VGG16-LSTM 88.0%; tested on unseen people it scores 79.4%, while optical flow and pose moved by less than 3 points (see the KTH comparison above).
@@ -164,18 +164,7 @@ Can a model pretrained on millions of unlabelled videos recognize these actions 
 - **A foundation model needs far fewer labels, where it has seen similar video.** Frozen V-JEPA 2 features reach 93.6% on UCF101 with 5 labelled videos per class, above the CNN-LSTM trained on all 594, but on lab-recorded KTH they lose to pose keypoints from 5 labels up (81.8% vs 87.5% with all labels), most likely because averaging its features over time loses the speed that separates jogging from running and walking.
 - **Compute cost moves rather than disappears.** The best classical models train in seconds to minutes once features exist, but pose extraction takes about 2 hours on a laptop GPU, and the CNN-LSTM trains for 2.2 hours (UCF101) to 5 hours (KTH) on CPU. The frozen foundation model is the cheapest strong option: one 9–23 minute encoding pass on the GPU, then seconds per classifier.
 
-## 🚧 Project status
-
-- [x] Convert the original notebooks into a reusable, tested command-line pipeline
-- [x] Support several datasets (KTH, UCF101) with official splits
-- [x] UCF101: raw-frame baseline and optical flow + bag of visual words
-- [x] UCF101: pose keypoints (torchvision Keypoint R-CNN)
-- [x] UCF101: CNN-LSTM
-- [x] KTH: rerun the full pipeline on the original data and compare with the course project results
-- [x] Compare with a modern video foundation model (V-JEPA 2, frozen) with few labels
-- [ ] Next: keep V-JEPA 2's timing (fixed frame rate, per-time-step features or an attentive probe) and fine-tune the encoder, to close the KTH gap
-
-## 🗂️ Repository structure
+## Repository structure
 
 ```
 scripts/
@@ -195,7 +184,7 @@ scripts/
 
 Every script prints its metrics and saves confusion matrices, training curves and models to `outputs/<dataset>/`. Run any script with `--help` for its options.
 
-## ▶️ Quick start
+## Quick start
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
@@ -222,7 +211,7 @@ python scripts/extract_video_features.py --dataset ucf101    # downloads V-JEPA 
 python scripts/train_few_shot.py --dataset ucf101           # needs the pose keypoints above
 ```
 
-<details>
+<!-- <details>
 <summary><b>Notes on the original course code and what changed</b></summary>
 
 <br>
@@ -237,14 +226,14 @@ The scripts are a rewrite of the original course notebooks. The methods and hype
 
 Because of these fixes, rerunning on KTH will not reproduce the course project numbers exactly. The KTH comparison above lists both.
 
-</details>
+</details> -->
 
-## 📚 References
+## References
 
 - C. Schüldt, I. Laptev and B. Caputo, "Recognizing human actions: a local SVM approach," *ICPR*, 2004. ([KTH dataset](https://www.csc.kth.se/cvap/actions/))
 - K. Soomro, A. R. Zamir and M. Shah, "UCF101: A dataset of 101 human actions classes from videos in the wild," *arXiv:1212.0402*, 2012.
 - M. Assran et al., "V-JEPA 2: Self-supervised video models enable understanding, prediction and planning," *arXiv:2506.09985*, 2025.
 
-## 👩‍💻 Author
+## Author
 
 **Ornela Bregu**, PhD in Information Systems Engineering (Concordia University) · [LinkedIn](https://linkedin.com/in/ornelabregu)
